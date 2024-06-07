@@ -101,6 +101,7 @@ ERROR() {
         echo; echo "$*"; exit 1 "ERROR: $*" | tee -a "${LOG_FULLPATH}/${LOG_FILE}" >&2
     fi
 }
+ECHO() { echo; echo "$*"; }
 ask() { read -p "$*" answer; }
 ASK() { echo; read -p "$*" answer; }
 pause() { read -p "$*"; }
