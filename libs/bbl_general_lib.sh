@@ -112,17 +112,29 @@ fn_bbgl_config_log_level() {
     readonly LOG_LEVEL_ABORT=3
     readonly LOG_LEVEL_ERROR=4
     ## Search for the log-level flag in the arguments
+    fn_bbgl_check_args_search_flag "log-level" $@
+    [ -n "${FLAG_FOUND_VALUE}" ] && LOG_LEVEL="${FLAG_FOUND_VALUE}"
+    ## Set the default log-level if not defined yet
+    [ -z "${LOG_LEVEL}" ] && LOG_LEVEL=${LOG_LEVEL_INFO}
+    debug "After check_args_LOG_LEVEL = ${LOG_LEVEL}"
+}
+
+###########################
+### check args functions ##
+###########################
+fn_bbgl_check_args_search_flag() {
+    ## Search for flag in the main script arguments
+    flag_name="$1"
+    echo "flag_name = $flag_name"
+    echo "\$@ = $@"
     for flag in $@; do
-        log_level_flag=$(echo "${flag}" | grep "\-\-log\-level")
-        if [ -n "${log_level_flag}" ]; then
-            LOG_LEVEL=$(echo "${log_level_flag}" | awk -F'=' '{print $2}')
-	    DEBUG "Log level flag = \"${LOG_LEVEL}\" found"
+        flag_found=$(echo "${flag}" | grep "\-\-${flag_name}=")
+        if [ -n "${flag_found}" ]; then
+            FLAG_FOUND_VALUE=$(echo "${flag_found}" | awk -F'=' '{print $2}')
+	    echo "${flag_name} flag = \"${FLAG_FOUND_VALUE}\" found"
 	    break
         fi
     done
-    ## Set the default log-level if not defined yet
-    [ -z "${LOG_LEVEL}" ] && LOG_LEVEL=${LOG_LEVEL_INFO}
-
 }
 
 #######################
