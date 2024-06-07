@@ -48,22 +48,22 @@ fn_bbgl_config_log() {
 #####################
 info() {
     if [[ $LOG_LEVEL -le $LOG_LEVEL_INFO ]]; then
-        echo "INFO: $*" | tee -a "${LOG_FULLPATH}/${LOG_FILE}" >&2
+        echo "INFO:  $*" | tee -a "${LOG_FULLPATH}/${LOG_FILE}" >&2
     fi
 }
 INFO() {
     if [[ $LOG_LEVEL -le $LOG_LEVEL_INFO ]]; then
-        echo; echo "INFO: $*" | tee -a "${LOG_FULLPATH}/${LOG_FILE}" >&2
+        echo; echo "INFO:  $*" | tee -a "${LOG_FULLPATH}/${LOG_FILE}" >&2
     fi
 }
 warn() {
     if [[ $LOG_LEVEL -le $LOG_LEVEL_WARN ]]; then
-        echo "WARN: $*" | tee -a "${LOG_FULLPATH}/${LOG_FILE}" >&2
+        echo "WARN:  $*" | tee -a "${LOG_FULLPATH}/${LOG_FILE}" >&2
     fi
 }
 WARN() {
     if [[ $LOG_LEVEL -le $LOG_LEVEL_WARN ]]; then
-        echo; echo "WARN: $*" | tee -a "${LOG_FULLPATH}/${LOG_FILE}" >&2
+        echo; echo "WARN:  $*" | tee -a "${LOG_FULLPATH}/${LOG_FILE}" >&2
     fi
 }
 debug() {
