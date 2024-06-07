@@ -71,6 +71,11 @@ debug() {
         echo "DEBUG: $*" | tee -a "${LOG_FULLPATH}/${LOG_FILE}" >&2
     fi
 }
+debug2() {
+    if [[ $LOG_LEVEL -le $LOG_LEVEL_DEBUG2 ]]; then
+        echo "DEBUG2: $*" | tee -a "${LOG_FULLPATH}/${LOG_FILE}" >&2
+    fi
+}
 DEBUG() {
     if [[ $LOG_LEVEL -le $LOG_LEVEL_DEBUG ]]; then
         echo; echo "DEBUG: $*" | tee -a "${LOG_FULLPATH}/${LOG_FILE}" >&2
@@ -106,11 +111,12 @@ PAUSE() { echo; read -p "$*"; }
 ########################
 fn_bbgl_config_log_level() {
     ## Set the log levels
-    readonly LOG_LEVEL_DEBUG=0
-    readonly LOG_LEVEL_INFO=1
-    readonly LOG_LEVEL_WARN=2
-    readonly LOG_LEVEL_ABORT=3
-    readonly LOG_LEVEL_ERROR=4
+    readonly LOG_LEVEL_DEBUG2=0
+    readonly LOG_LEVEL_DEBUG=1
+    readonly LOG_LEVEL_INFO=2
+    readonly LOG_LEVEL_WARN=3
+    readonly LOG_LEVEL_ABORT=4
+    readonly LOG_LEVEL_ERROR=5
     ## Search for the log-level flag in the arguments
     fn_bbgl_check_args_search_flag "log-level" $@
     [ -n "${FLAG_FOUND_VALUE}" ] && LOG_LEVEL="${FLAG_FOUND_VALUE}"
@@ -244,56 +250,56 @@ fn_bbgl_parse_file_section() {
     fn_bbgl_ifs_2_newline activa
     for line in $(cat "${file_2_parse}"); do
 	if [ ${section_found} -eq "0" ]; then
-    	    DEBUG "bbgl - Cercant la secció \"${section}\""
+    	    debug2 "bbgl - Cercant la secció \"${section}\""
 	    # section_found=$(echo "${line}" | grep -c "${str_start}")
 	    section_found=$(echo "${line}" | grep -c "${str_start}")
 	    if [ ${section_found} -eq "1" ]; then
-		DEBUG "bbgl - Trobat Start de secció \"${section}\""
+		debug2 "bbgl - Trobat Start de secció \"${section}\""
 	    elif [ ${section_found} -eq "0" ]; then
-		DEBUG "bbgl - Encara NO trobada la secció ${section}"
+		debug2 "bbgl - Encara NO trobada la secció ${section}"
 	    fi
 	fi
 	## Until not yet in section_end, the bellow if statment will search for it
 	## on every line of loop
         ## When section_end found, a break will be performed
         if [ "${section_found}" -eq "1" -a "${section_end}" -ne "1" ]; then
-            DEBUG "bbgl - section_end var after 1st check = ${section_end}"
+            debug2 "bbgl - section_end var after 1st check = ${section_end}"
 	    ## Search section_end pattern in var
 	    section_end=$(echo "${line}" | grep "^${str_end}" | grep -c -v "${section}")
-            DEBUG "bbgl - section_end var search again result = ${section_end}"
+            debug2 "bbgl - section_end var search again result = ${section_end}"
 	    [ "${section_end}" -eq "1" ] \
-		&& DEBUG "bbgl - section end FOUND after 2nd check: \"${section}\"" && break
+		&& debug2 "bbgl - section end FOUND after 2nd check: \"${section}\"" && break
 	    ## When section_end found, curr line (section tag) will not be processed
 	    ## thanks to grep -v
 	fi
 	## Action: "load_section" ##
 	if [ "${parse_action}" == "load_section" ]; then
 	    ## Utilitzat per seccions de config file
-	    DEBUG "bbgl - line original: ${line}"
+	    debug2 "bbgl - line original: ${line}"
 	    line_filtered=$(echo "${line}" | grep -v '^\[' | grep -v '^#')
-	    DEBUG "bbgl - line filtered: ${line}"
+	    debug2 "bbgl - line filtered: ${line}"
 	    ## Evaluate filtered line if not empty: 
 	    if [ -n "${line_filtered}" ]; then
-	        DEBUG "bbgl - Evaluating line: "${line}""
+	        debug2 "bbgl - Evaluating line: "${line}""
 		eval ${line_filtered}
 	    fi
 	## Action: "ask_empty_vars" ##
 	elif [ "${parse_action}" == "ask_empty_vars" ]; then
 	    ## Utilitzat per seccions de config file
-	    DEBUG "bbgl - line original: ${line}"
+	    debug2 "bbgl - line original: ${line}"
 	    line_filtered=$(echo "${line}" | grep -v '^\[' | grep -v '^#')
-	    DEBUG "bbgl - line filtered: ${line}"
+	    debug2 "bbgl - line filtered: ${line}"
 	    ## Evaluate filtered line if not empty: 
 	    if [ -n "${line_filtered}" ]; then
                 var_not_set=$(echo "${line_filtered}" \
 		    | grep -v "#" | grep -v "=\"" | grep "=")
 	        if [ -n "${var_not_set}" ]; then
-	            DEBUG "bbgl - var_not_set = $var_not_set"
+	            debug2 "bbgl - var_not_set = $var_not_set"
 	            ASK "\"${var_not_set}\" name is not configured. Please type it: "
                     [ -n "${answer}" ] && sed -i \
 	                "s/${var_not_set}/${var_not_set}\"${answer}\"/g" "${file_2_parse}"
 	        fi
-	        DEBUG "bbgl - Evaluating line: "${line}""
+	        debug2 "bbgl - Evaluating line: "${line}""
 		eval ${line_filtered}
 	    fi
 	# Action: "search_varnames" ##
@@ -303,10 +309,10 @@ fn_bbgl_parse_file_section() {
 		## Check if the varname specified as the fifth fn arg is found
 		## in the specified file and section
 		line_filtered=$(echo "${line}" | grep "${var_filter}")
-                DEBUG "bbgl - var_filter val: ${var_filter}"
+                debug2 "bbgl - var_filter val: ${var_filter}"
                 if [ -n "${line_filtered}" ]; then
-                    DEBUG "bbgl - Found var \"${line_filtered}\" using filter \"${var_filter}\""
-                    debug "       Adding it to \"arr_vars_found\""
+                    debug2 "bbgl - Found var \"${line_filtered}\" using filter \"${var_filter}\""
+                    debug2 "       Adding it to \"arr_vars_found\""
 		    arr_vars_found+=( "${line_filtered}" )
                     break
 		fi
@@ -317,12 +323,12 @@ fn_bbgl_parse_file_section() {
                 ## Start of scan lines loop
                 for var_filter in  "${arr_vars_filter[@]}"; do
                     line_filtered=$(echo "${line}" | grep "${var_filter}")
-                    DEBUG "bbgl - line val: ${line}"
-                    debug "bbgl - line_filtered val: ${line_filtered}"
-                    debug "bbgl - var_filter val: ${var_filter}"
+                    debug2 "bbgl - line val: ${line}"
+                    debug2 "       line_filtered val: ${line_filtered}"
+                    debug2 "       var_filter val: ${var_filter}"
                     if [ -n "${line_filtered}" ]; then
-                        DEBUG "bbgl - Found var \"${line_filtered}\" using filter \"${var_filter}\""
-                        debug "       Adding it to \"arr_vars_found\""
+                        debug2 "bbgl - Found var \"${line_filtered}\" using filter \"${var_filter}\""
+                        debug2 "       Adding it to \"arr_vars_found\""
 		        arr_vars_found+=( "${line_filtered}" )
 		    fi
 		done
@@ -331,8 +337,8 @@ fn_bbgl_parse_file_section() {
 		## Get all vars in the specified file and section and put them into an array
 	        line_filtered=$(echo "${line}" | grep -v '^\[' | grep -v '^#')
                 if [ -n "${line_filtered}" ]; then
-                    DEBUG "bbgl - Found var \"${line_filtered}\""
-                    debug "       Adding it to \"arr_vars_found\""
+                    debug2 "bbgl - Found var \"${line_filtered}\""
+                    debug2 "       Adding it to \"arr_vars_found\""
 		    arr_lines_found+=( "${line_filtered}" )
                     arr_vars_found+=( "$(echo "${line_filtered}" | grep '=')" )
                 fi
@@ -341,21 +347,21 @@ fn_bbgl_parse_file_section() {
     done
     ## Print msg if the specified section was not found after looping the entire file
     if [ ${section_found} -eq "0" ]; then
-	DEBUG "bbgl - Section ${section} not found in \"${file_2_parse}\" file"
+	error "bbgl - Section ${section} not found in \"${file_2_parse}\" file"
     fi
 
     ## Restore IFS
     fn_bbgl_ifs_2_newline desactiva
 
 ## Final debug
-    DEBUG "bbgl - Inici prints després de sectio trobada"
-    debug "       str_start val: ${str_start}"
-    debug "       str_end val: ${str_end}"
-    debug "       section_end val: ${section_end}"
-    debug "       line val: ${line}"
-    debug "       var_name val: ${var_name}"
-    debug "       var_found val: ${var_found}"
-    debug "       line_filtered val: ${line_filtered}"
+    debug2 "bbgl - Inici prints després de sectio trobada"
+    debug2 "       str_start val: ${str_start}"
+    debug2 "       str_end val: ${str_end}"
+    debug2 "       section_end val: ${section_end}"
+    debug2 "       line val: ${line}"
+    debug2 "       var_name val: ${var_name}"
+    debug2 "       var_found val: ${var_found}"
+    debug2 "       line_filtered val: ${line_filtered}"
     # read -p "Pausa"
 
 << "CALL_SAMPLES"
