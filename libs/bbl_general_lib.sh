@@ -200,6 +200,55 @@ fn_bbgl_ifs_2_newline() {
 	IFS=$IFS_BACKUP
     fi
 }
+
+fn_bssf_menu_fzf() {
+    ## Exit if fzf not found
+    [[ -z "$(which fzf)" ]] && echo && echo "\"fzf\" util not found." && exit 5
+    ## Exit function if arry have length 0
+    [[ "${#arr_data[@]}" -eq "0" ]] && return 1
+    ## Call menu
+    echo
+    item="$1"
+    fzf_mode="$2"
+    echo; echo "Setting fzf for ${fzf_mode} mode..."
+    ## Define vars for each fzf mode
+    if [ "${fzf_mode}" == "single" ]; then
+        menu_title="Please select a \"${item}\" from the list:"
+        extra_opt=""
+    elif [ "${fzf_mode}" == "multi" ]; then
+        menu_title="Please select all the \"${item}\" that you want pressing the \"Tab\" key and then \"Intro\" to confirm:"
+        extra_opt='-m'
+    else
+        echo; echo "fzf mode \"${fzf_mode}\" not implemented!"
+    fi
+    #item_selected=""
+    item_selected=$(printf '%s\n' ${arr_data[@]} \
+        | fzf ${extra_opt} --reverse --border=rounded --border-label "${menu_title}" --height ~80%)
+    ## Put the selected items in an array on multi selection mode
+    #
+    if [ "${fzf_mode}" == "multi" ]; then
+        IFS_BKP=$IFS && IFS=$'\n' read -r -d '' -a arr_items_selected <<< "${item_selected}"
+        IFS=$IFS_BKP
+    fi
+    # DEBUG # info "arr_items_selected = ${arr_items_selected[@]}"
+    # DEBUG # info "lengt arr_item_selected = ${#arr_items_selected[*]}"
+    # DEBUG # info "Option selected: \"${item_selected}\""
+<< "CALL_SAMPLES"
+    arr_data=( "${arr_LIST_FN_PLUGINS[@]}" )
+    fn_bssf_menu_fzf "plugin" "single|multi"
+    PLUGIN="${item_selected}"
+    FN_PLUGIN="fn_plugin_${PLUGIN}"
+    ### echo && echo "Plugin selected = \"${PLUGIN}\"" #DEBUG#
+    ### echo && echo "Plugin fn selected = \"${FN_PLUGIN}\"" #DEBUG#
+
+    [[ -z "${item_selected}" ]] && echo && echo "Plugin selection failed!" && exit 1
+
+    ## Crida la fn_plugin_ corrsponent a l'opció de pluguin introduida
+    echo && echo "Executant funció def de plugin \"${FN_PLUGIN}\""
+    eval ${FN_PLUGIN}
+CALL_SAMPLES
+}
+
 fn_bbgl_parse_file_section() {
     ## v3
     #
