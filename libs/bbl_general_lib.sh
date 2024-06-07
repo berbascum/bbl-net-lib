@@ -170,10 +170,10 @@ fn_ask_write_not_set_vars_in_file() {
 ############################################
 ## FUNCIONS EINA CONF FILE PARSE SECCIONS ##
 ############################################
-fn_bssf_ifs_2_newline() {
+fn_bbgl_ifs_2_newline() {
     ## Config ICF to set array with spaced strings on each position value.
     if [ "${1}" == "" ]; then
-	echo && echo "b-s-s-f: Error: fn_bssf_ifs_2_newline param requerit."
+	ERROR "bbgl: Error: fn_bssf_ifs_2_newline param requerit."
     elif [ "${1}" == "activa" ]; then
 	# IFS_BACKUP=$IFS
 	IFS=$'\n'
