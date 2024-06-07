@@ -242,7 +242,7 @@ fn_bbgl_parse_file_section() {
 	    fi
 	fi
 	## Until not yet in section_end, the bellow if statment will search for it
-	## in every line of loop
+	## on every line of loop
         ## When section_end found, a break will be performed
         if [ "${section_found}" -eq "1" -a "${section_end}" -ne "1" ]; then
             DEBUG "bbgl - section_end var after 1st check = ${section_end}"
@@ -262,6 +262,25 @@ fn_bbgl_parse_file_section() {
 	    DEBUG "bbgl - line filtered: ${line}"
 	    ## Evaluate filtered line if not empty: 
 	    if [ -n "${line_filtered}" ]; then
+	        DEBUG "bbgl - Evaluating line: "${line}""
+		eval ${line_filtered}
+	    fi
+	## Action: "ask_empty_vars" ##
+	elif [ "${parse_action}" == "ask_empty_vars" ]; then
+	    ## Utilitzat per seccions de config file
+	    DEBUG "bbgl - line original: ${line}"
+	    line_filtered=$(echo "${line}" | grep -v '^\[' | grep -v '^#')
+	    DEBUG "bbgl - line filtered: ${line}"
+	    ## Evaluate filtered line if not empty: 
+	    if [ -n "${line_filtered}" ]; then
+                var_not_set=$(echo "${line_filtered}" \
+		    | grep -v "#" | grep -v "=\"" | grep "=")
+	        if [ -n "${var_not_set}" ]; then
+	            DEBUG "bbgl - var_not_set = $var_not_set"
+	            ASK "\"${var_not_set}\" name is not configured. Please type it: "
+                    [ -n "${answer}" ] && sed -i \
+	                "s/${var_not_set}/${var_not_set}\"${answer}\"/g" "${file_2_parse}"
+	        fi
 	        DEBUG "bbgl - Evaluating line: "${line}""
 		eval ${line_filtered}
 	    fi
