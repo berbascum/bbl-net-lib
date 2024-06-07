@@ -217,7 +217,7 @@ fn_bbgl_parse_file_section() {
     ## Configuration of any other section than "HEADER_SECTION"
     elif [ "$section" != "HEADER_SECTION" ]; then
 	## file_2_parse
-	file_2_parse=$(eval "echo \${CONF_"${1}"_ARXIU}")
+	file_2_parse=$(eval "echo \${"${1}"_FULLPATH_FILENAME}")
 	[ ! -f "${file_2_parse}" ] && ERROR "file_2_parse ${file_2_parse} not found"
 	## parse search options
 	str_start="\[$section\]"
