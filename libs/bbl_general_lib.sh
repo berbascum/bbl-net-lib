@@ -125,13 +125,13 @@ fn_bbgl_config_log_level() {
 fn_bbgl_check_args_search_flag() {
     ## Search for flag in the main script arguments
     flag_name="$1"
-    echo "flag_name = $flag_name"
-    echo "\$@ = $@"
+    debug "flag_name = \"$flag_name\""
+    debug "\$@ = \"$@\""
     for flag in $@; do
         flag_found=$(echo "${flag}" | grep "\-\-${flag_name}=")
         if [ -n "${flag_found}" ]; then
             FLAG_FOUND_VALUE=$(echo "${flag_found}" | awk -F'=' '{print $2}')
-	    echo "${flag_name} flag = \"${FLAG_FOUND_VALUE}\" found"
+	    debug "\"${flag_name}\" flag = \"${FLAG_FOUND_VALUE}\" found"
 	    break
         fi
     done
