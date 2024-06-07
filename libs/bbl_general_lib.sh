@@ -181,111 +181,127 @@ fn_bbgl_ifs_2_newline() {
 	IFS=$IFS_BACKUP
     fi
 }
-fn_bssf_parse_file_section() {
+fn_bbgl_parse_file_section() {
     ## v3
+    #
+    ## This function search for a specified section start and end in a specified file
+    ## and evals the code between.
+    #
     ## Compatible with "CONFIG FILE SECTIONS" and "BERB BINSRC HEADER"
-    ## This function search for a specified section start and end in a specified file and evals the code between.
+    #
+    ## "BERB BINSRC HEADER" was used before implementing debian packaging in the scripts,
+    ## so probably will be deprecated
+    #
     ## Configure parser
     section="$2"
     parse_action="$3"
-    [ -z "${section}" ] && echo && echo "A section name is needed as argument \"2\"" && exit 1
-    [ -z "${parse_action}" ] && echo && echo "A parse action is needed as argument \"3\"" && exit 1
+    [ -z "${section}" ] && ERROR "A section name is needed as argument \"2\""
+    [ -z "${parse_action}" ] && ERROR "A parse action is needed as argument \"3\""
     ## Configuration of "HEADER_SECTION"
     if [ "$section" == "HEADER_SECTION" ]; then
 	## file_2_parse
 	file_2_parse="$1"
-	[ ! -f "${file_2_parse}" ] && echo && echo "file_2_parse ${file_2_parse} not found" && exit 1
+	[ ! -f "${file_2_parse}" ] \
+	    && ERROR "file_2_parse ${file_2_parse} not found"
 	## parse search options
 	str_start="#\[${section}\]"
 	str_end="#\[HEADER_END\]"
 	how_many_vars="$4"
-	[ -z "${how_many_vars}" ] && echo && echo "A search var mode all|one|first is needed as arg \"4\"" && exit 1
+	[ -z "${how_many_vars}" ] \
+	    && ERROR "A search var mode all|one|first is needed as arg \"4\""
         if [ "${how_many_vars}" == "one" ]; then
 	    var_2_search="$5"
-            [ -z "${var_2_search}" ] && echo && echo "A var name as argument \"5\" is required " && exit 1
+            [ -z "${var_2_search}" ] \
+		&& ERROR "A var name as argument \"5\" is required"
         fi
     ## Configuration of any other section than "HEADER_SECTION"
     elif [ "$section" != "HEADER_SECTION" ]; then
 	## file_2_parse
 	file_2_parse=$(eval "echo \${CONF_"${1}"_ARXIU}")
-	[ ! -f "${file_2_parse}" ] && echo && echo "file_2_parse ${file_2_parse} not found" && exit 1
+	[ ! -f "${file_2_parse}" ] && ERROR "file_2_parse ${file_2_parse} not found"
 	## parse search options
 	str_start="\[$section\]"
 	str_end="\["
     fi
-    echo && echo "b-s-s-f: Starting section \"${section}\" parsing with action \"${parse_action}\" on \"${file_2_parse}\" file"
+    INFO "bbgl: Parsing \"${section}\" section: \"${parse_action}\" on \"${file_2_parse}\""
     section_found="0"
     section_end="0"
     arr_vars_found=()
     arr_lines=()
     ## Change IFS to avoid line splitting on spaces in lines
-    fn_bssf_ifs_2_newline activa
+    fn_bbgl_ifs_2_newline activa
     for line in $(cat "${file_2_parse}"); do
 	if [ ${section_found} -eq "0" ]; then
-    	    # DEBUG # echo && echo "bssf - Cercant la secció \"${section}\""
+    	    DEBUG "bbgl - Cercant la secció \"${section}\""
 	    # section_found=$(echo "${line}" | grep -c "${str_start}")
 	    section_found=$(echo "${line}" | grep -c "${str_start}")
 	    if [ ${section_found} -eq "1" ]; then
-		echo && echo "bssf - Trobat Start de secció \"${section}\""
-	        # DEBUG # elif [ ${section_found} -eq "0" ]; then
-		# DEBUG #   echo && echo "bssf - Encara NO trobada la secció ${section}"
+		DEBUG "bbgl - Trobat Start de secció \"${section}\""
+	    elif [ ${section_found} -eq "0" ]; then
+		DEBUG "bbgl - Encara NO trobada la secció ${section}"
 	    fi
 	fi
-	## Until not yet in section_end, the bellow if statment will search for it in every line of loop
-        ## When section_end founded, a break will be performed
+	## Until not yet in section_end, the bellow if statment will search for it
+	## in every line of loop
+        ## When section_end found, a break will be performed
         if [ "${section_found}" -eq "1" -a "${section_end}" -ne "1" ]; then
+            DEBUG "bbgl - section_end var after 1st check = ${section_end}"
 	    ## Search section_end pattern in var
-	    section_end=$(echo "${line}" | grep "^${str_end}" | grep -c --invert-match "${section}")
-            # DEBUG # echo  "section_end after check: ${section_end}"
-	    [ "${section_end}" -eq "1" ] && echo && echo "Trobat End de secció: \"${section}\"" && break
-	    ## When section_end found, curr line (section tag) will not be procssed thanks to grep -- invert-match
+	    section_end=$(echo "${line}" | grep "^${str_end}" | grep -c -v "${section}")
+            DEBUG "bbgl - section_end var search again result = ${section_end}"
+	    [ "${section_end}" -eq "1" ] \
+		&& DEBUG "bbgl - section end FOUND after 2nd check: \"${section}\"" && break
+	    ## When section_end found, curr line (section tag) will not be processed
+	    ## thanks to grep -v
 	fi
 	## Action: "load_section" ##
 	if [ "${parse_action}" == "load_section" ]; then
 	    ## Utilitzat per seccions de config file
-	    # DEBUG # echo && echo "bssf - line original: ${line}"
-	    line_filtered=$(echo "${line}" | grep --invert-match '^\[' | grep --invert-match '^#')
-	    # DEBUG # echo && echo "bssf - line filtered: ${line}"
+	    DEBUG "bbgl - line original: ${line}"
+	    line_filtered=$(echo "${line}" | grep -v '^\[' | grep -v '^#')
+	    DEBUG "bbgl - line filtered: ${line}"
 	    ## Evaluate filtered line if not empty: 
 	    if [ -n "${line_filtered}" ]; then
-	        # DBUG # echo && echo "bssf - Evaluating line: "${line}""
+	        DEBUG "bbgl - Evaluating line: "${line}""
 		eval ${line_filtered}
 	    fi
 	# Action: "search_varnames" ##
         elif [ "${parse_action}" == "search_varnames" ]; then
             # Arg "how_many_vars = one"
 	    if [ "${how_many_vars}" == "one" ]; then
-		## Check if the varname specified as the fifth fn arg is found in in the specified file and section
+		## Check if the varname specified as the fifth fn arg is found
+		## in the specified file and section
 		line_filtered=$(echo "${line}" | grep "${var_filter}")
-                # DEBUG # echo && echo "var_filter val: ${var_filter}"
+                DEBUG "bbgl - var_filter val: ${var_filter}"
                 if [ -n "${line_filtered}" ]; then
-                    echo && echo "bssf - Found var \"${line_filtered}\" using filter \"${var_filter}\""
-                    echo "       Adding it to \"arr_vars_found\""
+                    DEBUG "bbgl - Found var \"${line_filtered}\" using filter \"${var_filter}\""
+                    debug "       Adding it to \"arr_vars_found\""
 		    arr_vars_found+=( "${line_filtered}" )
                     break
 		fi
             # Arg "how_many_vars = list"
             elif [ "${how_many_vars}" == "list" ]; then
-		## Check if the varnames in a list from an array are found in the specified file and section
+		## Check if the varnames in a list from an array are found
+		## in the specified file and section
                 ## Start of scan lines loop
                 for var_filter in  "${arr_vars_filter[@]}"; do
                     line_filtered=$(echo "${line}" | grep "${var_filter}")
-                    # DEBUG # echo "line val: ${line}"
-                    # debug # echo "line_filtered val: ${line_filtered}"
-                    # DEBUG # echo "var_filter val: ${var_filter}"
+                    DEBUG "bbgl - line val: ${line}"
+                    debug "bbgl - line_filtered val: ${line_filtered}"
+                    debug "bbgl - var_filter val: ${var_filter}"
                     if [ -n "${line_filtered}" ]; then
-                        echo && echo "bssf - Found var \"${line_filtered}\" using filter \"${var_filter}\""
-                        echo "       Adding it to \"arr_vars_found\""
+                        DEBUG "bbgl - Found var \"${line_filtered}\" using filter \"${var_filter}\""
+                        debug "       Adding it to \"arr_vars_found\""
 		        arr_vars_found+=( "${line_filtered}" )
 		    fi
 		done
             # Arg "how_many_vars = all"
 	    elif [ "${how_many_vars}" == "all" ]; then
 		## Get all vars in the specified file and section and put them into an array
-	        line_filtered=$(echo "${line}" | grep --invert-match '^\[' | grep --invert-match '^#')
+	        line_filtered=$(echo "${line}" | grep -v '^\[' | grep -v '^#')
                 if [ -n "${line_filtered}" ]; then
-                    echo && echo "bssf - Found var \"${line_filtered}\""
-                    echo "       Adding it to \"arr_vars_found\""
+                    DEBUG "bbgl - Found var \"${line_filtered}\""
+                    debug "       Adding it to \"arr_vars_found\""
 		    arr_lines_found+=( "${line_filtered}" )
                     arr_vars_found+=( "$(echo "${line_filtered}" | grep '=')" )
                 fi
@@ -294,11 +310,22 @@ fn_bssf_parse_file_section() {
     done
     ## Print msg if the specified section was not found after looping the entire file
     if [ ${section_found} -eq "0" ]; then
-	echo && echo "bssf - Section ${section} not found in \"${file_2_parse}\" file"
+	DEBUG "bbgl - Section ${section} not found in \"${file_2_parse}\" file"
     fi
 
     ## Restore IFS
-    fn_bssf_ifs_2_newline desactiva
+    fn_bbgl_ifs_2_newline desactiva
+
+## Final debug
+    DEBUG "bbgl - Inici prints després de sectio trobada"
+    debug "       str_start val: ${str_start}"
+    debug "       str_end val: ${str_end}"
+    debug "       section_end val: ${section_end}"
+    debug "       line val: ${line}"
+    debug "       var_name val: ${var_name}"
+    debug "       var_found val: ${var_found}"
+    debug "       line_filtered val: ${line_filtered}"
+    # read -p "Pausa"
 
 << "CALL_SAMPLES"
     # CALL SAMPLE "load_section":
@@ -322,16 +349,4 @@ fn_bssf_parse_file_section() {
         ## Returns "arr_vars_found" containing the var def lines if found
 
 CALL_SAMPLES
-
-<< "BLOCK_DEBUG"
-    echo && echo "Inici prints després de sectio trobada"
-    echo "str_start val: ${str_start}"
-    echo "str_end val: ${str_end}"
-    echo "section_end val: ${section_end}"
-    echo "line val: ${line}"
-    echo "var_name val: ${var_name}"
-    echo "var_found val: ${var_found}"
-    echo "line_filtered val: ${line_filtered}"
-    # read -p "Pausa"
-BLOCK_DEBUG
 }
