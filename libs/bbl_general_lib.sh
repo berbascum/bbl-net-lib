@@ -83,22 +83,26 @@ DEBUG() {
 }
 abort() {
     if [[ $LOG_LEVEL -le $LOG_LEVEL_ABORT ]]; then
-        echo "ABORT: $*"; exit 10 | tee -a "${LOG_FULLPATH}/${LOG_FILE}" >&2
+        echo "ABORT: $*" | tee -a "${LOG_FULLPATH}/${LOG_FILE}" >&2
+        exit 10 
     fi
 }
 ABORT() {
     if [[ $LOG_LEVEL -le $LOG_LEVEL_ABORT ]]; then
-        echo; echo "ABORT: $*"; exit 10 | tee -a "${LOG_FULLPATH}/${LOG_FILE}" >&2
+        echo; echo "ABORT: $*" | tee -a "${LOG_FULLPATH}/${LOG_FILE}" >&2
+        exit 10 
     fi
 }
 error() {
     if [[ $LOG_LEVEL -le $LOG_LEVEL_ERROR ]]; then
-        echo "ERROR: $*"; exit 1 | tee -a "${LOG_FULLPATH}/${LOG_FILE}" >&2
+        echo "ERROR: $*" | tee -a "${LOG_FULLPATH}/${LOG_FILE}" >&2
+        exit 10
     fi
 }
 ERROR() {
     if [[ $LOG_LEVEL -le $LOG_LEVEL_ERROR ]]; then
-        echo; echo "ERROR: $*"; exit 1 | tee -a "${LOG_FULLPATH}/${LOG_FILE}" >&2
+        echo; echo "ERROR: $*" | tee -a "${LOG_FULLPATH}/${LOG_FILE}" >&2
+        exit 1 
     fi
 }
 ECHO() { echo; echo "$*"; }
@@ -195,7 +199,7 @@ fn_bbgl_ifs_2_newline() {
     if [ "${1}" == "" ]; then
 	ERROR "bbgl: Error: fn_bssf_ifs_2_newline param requerit."
     elif [ "${1}" == "activa" ]; then
-	# IFS_BACKUP=$IFS
+	#IFS_BACKUP=$IFS
 	IFS=$'\n'
     elif [ "${1}" == "desactiva" ]; then
 	IFS=$IFS_BACKUP
