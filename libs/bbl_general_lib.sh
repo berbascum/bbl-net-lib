@@ -83,22 +83,22 @@ DEBUG() {
 }
 abort() {
     if [[ $LOG_LEVEL -le $LOG_LEVEL_ABORT ]]; then
-        echo "$*"; exit 10 "ABORT: $*" | tee -a "${LOG_FULLPATH}/${LOG_FILE}" >&2
+        echo "ABORT: $*"; exit 10 | tee -a "${LOG_FULLPATH}/${LOG_FILE}" >&2
     fi
 }
 ABORT() {
     if [[ $LOG_LEVEL -le $LOG_LEVEL_ABORT ]]; then
-        echo; echo "$*"; exit 10 "ABORT: $*" | tee -a "${LOG_FULLPATH}/${LOG_FILE}" >&2
+        echo; echo "ABORT: $*"; exit 10 | tee -a "${LOG_FULLPATH}/${LOG_FILE}" >&2
     fi
 }
 error() {
     if [[ $LOG_LEVEL -le $LOG_LEVEL_ERROR ]]; then
-        echo "$*"; exit 1 "ERROR: $*" | tee -a "${LOG_FULLPATH}/${LOG_FILE}" >&2
+        echo "ERROR: $*"; exit 1 | tee -a "${LOG_FULLPATH}/${LOG_FILE}" >&2
     fi
 }
 ERROR() {
     if [[ $LOG_LEVEL -le $LOG_LEVEL_ERROR ]]; then
-        echo; echo "$*"; exit 1 "ERROR: $*" | tee -a "${LOG_FULLPATH}/${LOG_FILE}" >&2
+        echo; echo "ERROR: $*"; exit 1 | tee -a "${LOG_FULLPATH}/${LOG_FILE}" >&2
     fi
 }
 ECHO() { echo; echo "$*"; }
@@ -134,6 +134,7 @@ fn_bbgl_check_args_search_flag() {
     flag_name="$1"
     debug "flag_name = \"$flag_name\""
     debug "\$@ = \"$@\""
+    FLAG_FOUND_VALUE=""
     for flag in $@; do
         flag_found=$(echo "${flag}" | grep "\-\-${flag_name}=")
         if [ -n "${flag_found}" ]; then
