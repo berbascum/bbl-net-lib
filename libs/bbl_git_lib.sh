@@ -97,9 +97,20 @@ fn_bblgit_changelog_build() {
     ## committer_mail=%ce date_RFC2822=%aD date_ISO-8601-like=%ai \
     ## header=%s(need to be the last)
     info "Generating a debian formatted changelog file from git log..."
+    ## The locale en_US.utf8 should be ensured to avoid format errors in changelog
+    en_us_locale=$(locale -a | grep "en_US.utf8")
+    if [ -z "${en_us_locale}" ]; then
+	PAUSE "Gen en_US.utf8 locale is needed, the sudo password will be needed!"
+        ${SUDO} sed -i 's/^# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/g' /etc/locale.gen
+	${SUDO}  locale-gen && ${SUDO} update-locale
+    fi
+    export LC_TIME=en_US.utf8
     date_full=$(date +"%a, %d %b %Y %H:%M:%S %z")
+    Sun, 09 Jun 2024 08:52:13 +0200
+    Sat, 03 Jul 2023 20:11:13 +0300
+    debug "date_full = ${date_full}"
     date_short=$(date +%Y%m%d%H%M%S)
-    pkg_version_git=$(echo "${package_version}+git${date_short}.${last_commit}.${package_dist_channel}")
+    pkg_version_git=$(echo "${package_version}+git${date_short}.${last_commit_id}.${pkg_dist_channel}")
     echo "${package_name} (${pkg_version_git}) ${pkg_dist_channel}; urgency=medium" \
 	> "${changelog_git_relpath_filename}"
     echo >> "${changelog_git_relpath_filename}"
@@ -136,7 +147,7 @@ fn_bblgit_changelog_build() {
 	echo >> "${changelog_git_relpath_filename}"
     done
     ## Committer of changes
-    echo  " -- ${commiter_name} <${commiter_email}> ${date_full}" \
+    echo  " -- ${commiter_name} <${commiter_email}>  ${date_full}" \
         >> "${changelog_git_relpath_filename}"
     rm -r commits_tmpdir
 }
@@ -144,7 +155,7 @@ fn_bblgit_changelog_build() {
 fn_bblgit_changelog_commit() {
     info "Creating commit with the updated changelog..."
     git add debian/changelog "${package_name}.sh"
-    git commit -m "Update: debian/changelog and version in main scr file"
+    git commit -m "Update: debian/changelog, and version/dist_channel in main source file"
     info "Creating tag \"${last_commit_tag}\" on the last commit..."
     git tag "${last_commit_tag}"
 }
