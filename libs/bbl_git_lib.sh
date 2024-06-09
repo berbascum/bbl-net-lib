@@ -73,16 +73,15 @@ fn_bblgit_last_two_tags_check() {
             [ -z "${input_tag_is_valid}" ] && error "The typed tag has not a valid format!"
             last_commit_tag="${answer}"
 	fi
+    fi
+    last_commit_id=$(git log --decorate  --abbrev-commit | head -n 1 | awk '{print $2}')
+    prev_last_commit_tag="$(git tag --sort=-creatordate | sed -n '2p')"
+    if [ -n "${prev_last_commit_tag}" ]; then
+        prev_last_commit_id=$(git log --decorate  --abbrev-commit \
+            | grep "${prev_last_commit_tag}" | head -n 1 | awk '{print $2}')
     else
-        last_commit_id=$(git log --decorate  --abbrev-commit | head -n 1 | awk '{print $2}')
-        prev_last_commit_tag="$(git tag --sort=-creatordate | sed -n '2p')"
-        if [ -n "${prev_last_commit_tag}" ]; then
-            prev_last_commit_id=$(git log --decorate  --abbrev-commit \
-                | grep "${prev_last_commit_tag}" | head -n 1 | awk '{print $2}')
-	else
-	    ## If there is only the last tag, set the initial commit as prev_last_commit
-	    prev_last_commit_id=$(git log --pretty=format:"%h" | tail -n 1)
-	fi
+        ## If there is only the last tag, set the initial commit as prev_last_commit
+        prev_last_commit_id=$(git log --pretty=format:"%h" | tail -n 1)
     fi
     debug "Last commit tag defined: ${last_commit_tag}"
 }
