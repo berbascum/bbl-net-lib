@@ -50,10 +50,6 @@ fn_bblgit_debian_control_found() {
 fn_bblgit_last_two_tags_check() {
     ## Check if the has commit has a tag
     last_commit_tag="$(git tag --contains "HEAD")"
-    last_commit_id=$(git log --decorate  --abbrev-commit | head -n 1 | awk '{print $2}')
-    prev_last_commit_tag="$(git tag --sort=-creatordate | sed -n '2p')"
-    prev_last_commit_id=$(git log --decorate  --abbrev-commit \
-        | grep "${prev_last_commit_tag}" | head -n 1 | awk '{print $2}')
 	
     if [ -z "${last_commit_tag}" ]; then
         clear && info "The last commit has not assigned a tag and is required"
@@ -76,6 +72,16 @@ fn_bblgit_last_two_tags_check() {
             input_tag_is_valid=$(echo "${answer}" | grep "\/")
             [ -z "${input_tag_is_valid}" ] && error "The typed tag has not a valid format!"
             last_commit_tag="${answer}"
+	fi
+    else
+        last_commit_id=$(git log --decorate  --abbrev-commit | head -n 1 | awk '{print $2}')
+        prev_last_commit_tag="$(git tag --sort=-creatordate | sed -n '2p')"
+        if [ -n "${prev_last_commit_tag}" ]; then
+            prev_last_commit_id=$(git log --decorate  --abbrev-commit \
+                | grep "${prev_last_commit_tag}" | head -n 1 | awk '{print $2}')
+	else
+	    ## If there is only the last tag, set the initial commit as prev_last_commit
+	    prev_last_commit_id=$(git log --pretty=format:"%h" | tail -n 1)
 	fi
     fi
     info "Last commit tag defined: ${last_commit_tag}"
