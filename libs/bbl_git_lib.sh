@@ -33,7 +33,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
 fn_bblgit_workdir_status_check() {
     [ -n "$(git status | grep "staged")" ] && abort "The git workdir is not clean!"
 }
@@ -46,4 +45,61 @@ fn_bblgit_dir_is_git() {
 fn_bblgit_debian_control_found() {
 ## Abort if no debian/control file found
     [ ! -f "debian/control" ] && abort "debian control file not found!"
+}
+
+fn_bblgit_changelog_build() {
+    changelog_git_relpath_filename="debian/changelog"
+    package_dist_channel_tag="develop"
+    package_version_tag=
+    ## Prepare changelog
+    if [ -f "${changelog_git_relpath_filename}" ]; then
+	rm "${changelog_git_relpath_filename}"
+    fi
+    touch "${changelog_git_relpath_filename}"
+    ## Get commit_id short=%h author=%an author_mail=%ae committer=%cn 
+    ## committer_mail=%ce date_RFC2822=%aD date_ISO-8601-like=%ai \
+    ## header=%s(need to be the last)
+    info "Generating a debian formatted changelog file from git log..."
+    date_full=$(date +"%a, %d %b %Y %H:%M:%S %z")
+    date_short=$(date +%Y%m%d%H%M%S)
+    pkg_version_git=$(echo "${package_version}+git${date_short}.${last_commit}.${package_dist_channel}")
+    echo "${package_name} (${pkg_version_git}) ${pkg_dist_channel}; urgency=medium" \
+	> "${changelog_git_relpath_filename}"
+    echo >> "${changelog_git_relpath_filename}"
+    debug "prev_last_commit_tag = ${prev_last_commit_tag}"
+    debug "last_commit_tag = ${last_commit_tag}"
+    [ -d "commits_tmpdir" ] ||  mkdir -v "commits_tmpdir"
+    git log --pretty=format:"%h %an %ae %cn %ce %cD %ci %s" "${prev_last_commit_id}"..."${last_commit_id}" > commits_tmpdir/export.txt
+    while read commit; do
+	commit_id_short=$(echo ${commit} | awk '{print $1}')
+	author_name=$(echo ${commit} | awk '{print $2}')
+	authot_email=$(echo ${commit} | awk '{print $3}')
+	commiter_name=$(echo ${commit} | awk '{print $4}')
+	debug2 "commiter_name =${commiter_name}"
+	commiter_email=$(echo ${commit} | awk '{print $5}')
+        #COMMITTER_DATE_RFC2822=$(echo ${commit} \
+	    ##| awk '{print $6 " " $7 " "  $8 " "  $9 " "  $10 " " $11}')
+        #COMMITTER_DATE_COMPACTED=$(echo ${commit} | awk '{print $12 $13}' \
+	    ## | tr  -d "-" | tr -d ":")
+	commit_header=$(echo ${commit} | awk '{ for (i=15; i<=NF; i++) printf $i " " }')
+	commit_body=$(git show --format=%b ${commit_id_short} | awk 'NR==1,/diff --git/' \
+		| grep --invert-match 'diff --git' | egrep '^[[:blank:]]*[^[:blank:]#]')
+        ## Put the commits in a file for each commiter
+	echo "  * (${commit_id_short}) ${commit_header}" \
+	    >> commits_tmpdir/${commiter_name}
+	if [ -n "${commit_body}" ]; then
+	    echo "              ${commit_body}" >> commits_tmpdir/${commiter_name}
+	fi
+    done <commits_tmpdir/export.txt
+    rm commits_tmpdir/export.txt
+    ## Cat every commiteter commits to the changelog file
+    for commiter_file in $(ls commits_tmpdir); do
+	echo "  [${commiter_name}]" >> "${changelog_git_relpath_filename}"
+        cat commits_tmpdir/${commiter_name} >> "${changelog_git_relpath_filename}"
+	echo >> "${changelog_git_relpath_filename}"
+    done
+    ## Committer of changes
+    echo  " -- ${commiter_name} <${commiter_email}> ${date_full}" \
+        >> "${changelog_git_relpath_filename}"
+    rm -r commits_tmpdir
 }
