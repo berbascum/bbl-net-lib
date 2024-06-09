@@ -144,7 +144,7 @@ fn_bblgit_changelog_build() {
 
 fn_bblgit_changelog_commit() {
     info "Creating commit with the updated changelog..."
-    git add debian/changelog
+    git add debian/changelog "${package_name}.sh"
     git commit -m "Update: debian/changelog and version in main scr file"
     info "Creating tag \"${last_commit_tag}\" on the last commit..."
     git tag "${last_commit_tag}"
