@@ -84,13 +84,11 @@ fn_bblgit_last_two_tags_check() {
 	    prev_last_commit_id=$(git log --pretty=format:"%h" | tail -n 1)
 	fi
     fi
-    info "Last commit tag defined: ${last_commit_tag}"
+    debug "Last commit tag defined: ${last_commit_tag}"
 }
 
 fn_bblgit_changelog_build() {
     changelog_git_relpath_filename="debian/changelog"
-    package_dist_channel_tag="develop"
-    package_version_tag=
     ## Prepare changelog
     if [ -f "${changelog_git_relpath_filename}" ]; then
 	rm "${changelog_git_relpath_filename}"
