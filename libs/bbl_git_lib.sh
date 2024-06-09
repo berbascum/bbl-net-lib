@@ -53,7 +53,7 @@ fn_bblgit_last_two_tags_check() {
 	
     if [ -z "${last_commit_tag}" ]; then
         clear && info "The last commit has not assigned a tag and is required"
-        last_tag=$(git describe --tags --abbrev=0)
+        last_tag=$(git tag --sort=-creatordate | sed -n '1p')
         if [ -n "${last_tag}" ]; then
 	    last_commit_tagged=$(git log --decorate  --abbrev-commit \
 	       | grep 'tag:' | head -n 1 | awk '{print $2}')
@@ -140,4 +140,12 @@ fn_bblgit_changelog_build() {
     echo  " -- ${commiter_name} <${commiter_email}> ${date_full}" \
         >> "${changelog_git_relpath_filename}"
     rm -r commits_tmpdir
+}
+
+fn_bblgit_changelog_commit() {
+    info "Creating commit with the updated changelog..."
+    git add debian/changelog
+    git commit -m "Update: debian/changelog and version in main scr file"
+    info "Creating tag \"${last_commit_tag}\" on the last commit..."
+    git tag "${last_commit_tag}"
 }
