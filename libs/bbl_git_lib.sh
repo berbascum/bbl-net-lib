@@ -50,9 +50,9 @@ fn_bblgit_debian_control_found() {
 fn_bblgit_last_two_tags_check() {
     ## Check if the has commit has a tag
     last_commit_tag="$(git tag --contains "HEAD")"
-	
     if [ -z "${last_commit_tag}" ]; then
         clear && info "The last commit has not assigned a tag and is required"
+	start_with_last_commit_tag="False"
         last_tag=$(git tag --sort=-creatordate | sed -n '1p')
         if [ -n "${last_tag}" ]; then
 	    last_commit_tagged=$(git log --decorate  --abbrev-commit \
@@ -169,8 +169,12 @@ fn_bblgit_changelog_commit() {
     else
         info "Creating commit with the updated changelog..."
         git add "${arr_files_to_commit[@]}"
-        git commit -m "Build version: debian/changelog and other version related upgrades"
+        git commit -m "Build \"${last_commit_tag}\" version: debian/changelog and other version related upgrades"
+    fi
+    ## Create the last_commit_tag if was defined by this script
+    if [ "${start_with_last_commit_tag}" == "False" ]; then
         info "Creating tag \"${last_commit_tag}\" on the last commit..."
         git tag "${last_commit_tag}"
     fi
+
 }
