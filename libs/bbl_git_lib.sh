@@ -74,16 +74,21 @@ fn_bblgit_last_two_tags_check() {
             last_commit_tag="${answer}"
 	fi
     fi
+    debug "last_commit_tag definition finished"
     last_commit_id=$(git log --decorate  --abbrev-commit | head -n 1 | awk '{print $2}')
     prev_last_commit_tag="$(git tag --sort=-creatordate | sed -n '2p')"
     if [ -n "${prev_last_commit_tag}" ]; then
-        prev_last_commit_id=$(git log --decorate  --abbrev-commit \
+        prev_last_commit_id=$(git log --decorate  --abbrev-commit | grep "tag:" \
             | grep "${prev_last_commit_tag}" | head -n 1 | awk '{print $2}')
     else
         ## If there is only the last tag, set the initial commit as prev_last_commit
         prev_last_commit_id=$(git log --pretty=format:"%h" | tail -n 1)
     fi
+    debug "prev_last_commit_id definition finished"
     debug "Last commit tag defined: ${last_commit_tag}"
+    debug "Last commit id defined: ${last_commit_id}"
+    debug "PrevLast commit tag defined: ${prev_last_commit_tag}"
+    debug "PrevLast commit id defined: ${prev_last_commit_id}"
 }
 
 fn_bblgit_changelog_build() {
@@ -129,7 +134,7 @@ fn_bblgit_changelog_build() {
 	    ## | tr  -d "-" | tr -d ":")
 	commit_header=$(echo ${commit} | awk '{ for (i=15; i<=NF; i++) printf $i " " }')
 	commit_body=$(git show --format=%b ${commit_id_short} | awk 'NR==1,/diff --git/' \
-		| grep --invert-match 'diff --git' | egrep '^[[:blank:]]*[^[:blank:]#]')
+	    | grep --invert-match 'diff --git' | egrep '^[[:blank:]]*[^[:blank:]#]')
         ## Put the commits in a file for each commiter
 	echo "  * (${commit_id_short}) ${commit_header}" \
 	    >> commits_tmpdir/${commiter_name}
@@ -148,12 +153,24 @@ fn_bblgit_changelog_build() {
     echo  " -- ${commiter_name} <${commiter_email}>  ${date_full}" \
         >> "${changelog_git_relpath_filename}"
     rm -r commits_tmpdir
+    INFO "Finalized changelog file build from git log..."
 }
 
 fn_bblgit_changelog_commit() {
-    info "Creating commit with the updated changelog..."
-    git add debian/changelog "${package_name}.sh"
-    git commit -m "Update: debian/changelog, and version/dist_channel in main source file"
-    info "Creating tag \"${last_commit_tag}\" on the last commit..."
-    git tag "${last_commit_tag}"
+    ## First check possible edited files rather than changelog and commit if exist
+    arr_files_may_have_been_edited=( "debian/changelog" "${package_name}.sh" )
+    arr_files_to_commit=()
+    for file_edited in ${arr_files_may_have_been_edited[@]}; do
+	[ -f "${file_edited}" ] && arr_files_to_commit+=( "${file_edited}" )
+    done
+    ## Check arr_files to_commit befor doing the commit
+    if [ "${#arr_files_to_commit[@]}" -eq "0" ]; then
+        error "debian/changelog not found when trying to commit it!"
+    else
+        info "Creating commit with the updated changelog..."
+        git add "${arr_files_to_commit[@]}"
+        git commit -m "Build version: debian/changelog and other version related upgrades"
+        info "Creating tag \"${last_commit_tag}\" on the last commit..."
+        git tag "${last_commit_tag}"
+    fi
 }
