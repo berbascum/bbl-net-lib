@@ -106,8 +106,6 @@ fn_bblgit_changelog_build() {
     fi
     export LC_TIME=en_US.utf8
     date_full=$(date +"%a, %d %b %Y %H:%M:%S %z")
-    Sun, 09 Jun 2024 08:52:13 +0200
-    Sat, 03 Jul 2023 20:11:13 +0300
     debug "date_full = ${date_full}"
     date_short=$(date +%Y%m%d%H%M%S)
     pkg_version_git=$(echo "${package_version}+git${date_short}.${last_commit_id}.${pkg_dist_channel}")
