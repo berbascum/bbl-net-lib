@@ -91,6 +91,18 @@ fn_bblgit_last_two_tags_check() {
     debug "PrevLast commit id defined: ${prev_last_commit_id}"
 }
 
+fn_bblgit_create_tag() {
+    ## First ensure again that the tag not exist yet
+    tag_exist=$(git log --decorate | grep "tag:" | grep "${last_commit_tag}")
+    [ -n "${tag_exis}" ] && return
+    ## Create the last_commit_tag if was defined by this script
+    if [ "${start_with_last_commit_tag}" == "False" ]; then
+        info "Creating tag \"${last_commit_tag}\" on the last commit..."
+        git tag "${last_commit_tag}"
+	git push --tags origin
+    fi
+}
+
 fn_bblgit_changelog_build() {
     changelog_git_relpath_filename="debian/changelog"
     changelog_builder_user=$(git config --global user.name)
@@ -122,7 +134,6 @@ fn_bblgit_changelog_build() {
     debug "prev_last_commit_tag = ${prev_last_commit_tag}"
     debug "last_commit_tag = ${last_commit_tag}"
     [ -d "commits_tmpdir" ] ||  mkdir -v "commits_tmpdir"
-    #git log --pretty=format:"%h %an %ae %cn %ce %cD %ci %s" "${prev_last_commit_id}"..."${last_commit_id}" > commits_tmpdir/export.txt
     git log --pretty=format:"%h %an %ae %cn %ce %cD %ci %s" "${prev_last_commit_id}"..."${last_commit_id}" > commits_tmpdir/export.txt
     while read commit; do
 	commit_id_short=$(echo ${commit} | awk '{print $1}')
@@ -174,10 +185,4 @@ fn_bblgit_changelog_commit() {
         git add "${arr_files_to_commit[@]}"
         git commit -m "Build \"${last_commit_tag}\" version: debian/changelog and other version related upgrades"
     fi
-    ## Create the last_commit_tag if was defined by this script
-    if [ "${start_with_last_commit_tag}" == "False" ]; then
-        info "Creating tag \"${last_commit_tag}\" on the last commit..."
-        git tag "${last_commit_tag}"
-    fi
-
 }
