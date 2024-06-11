@@ -93,6 +93,8 @@ fn_bblgit_last_two_tags_check() {
 
 fn_bblgit_changelog_build() {
     changelog_git_relpath_filename="debian/changelog"
+    changelog_builder_user=$(git config --global user.name)
+    changelog_builder_email=$(git config --global user.email)
     ## Prepare changelog
     if [ -f "${changelog_git_relpath_filename}" ]; then
 	rm "${changelog_git_relpath_filename}"
@@ -120,11 +122,12 @@ fn_bblgit_changelog_build() {
     debug "prev_last_commit_tag = ${prev_last_commit_tag}"
     debug "last_commit_tag = ${last_commit_tag}"
     [ -d "commits_tmpdir" ] ||  mkdir -v "commits_tmpdir"
+    #git log --pretty=format:"%h %an %ae %cn %ce %cD %ci %s" "${prev_last_commit_id}"..."${last_commit_id}" > commits_tmpdir/export.txt
     git log --pretty=format:"%h %an %ae %cn %ce %cD %ci %s" "${prev_last_commit_id}"..."${last_commit_id}" > commits_tmpdir/export.txt
     while read commit; do
 	commit_id_short=$(echo ${commit} | awk '{print $1}')
-	author_name=$(echo ${commit} | awk '{print $2}')
-	authot_email=$(echo ${commit} | awk '{print $3}')
+	author_name=$(echo ${commit} | awk '{print $2}') ## %an
+	author_email=$(echo ${commit} | awk '{print $3}') ## %an
 	commiter_name=$(echo ${commit} | awk '{print $4}')
 	debug2 "commiter_name =${commiter_name}"
 	commiter_email=$(echo ${commit} | awk '{print $5}')
@@ -150,7 +153,7 @@ fn_bblgit_changelog_build() {
 	echo >> "${changelog_git_relpath_filename}"
     done
     ## Committer of changes
-    echo  " -- ${commiter_name} <${commiter_email}>  ${date_full}" \
+    echo  " -- ${changelog_builder_user} <${changelog_builder_email}>  ${date_full}" \
         >> "${changelog_git_relpath_filename}"
     rm -r commits_tmpdir
     INFO "Finalized changelog file build from git log..."
