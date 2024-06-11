@@ -155,10 +155,11 @@ fn_bbgl_check_args_search_flag() {
 fn_bbgl_check_bash_ver() {
     bash_ver=$(bash --version | head -n 1 \
 	| awk '{print $4}' | awk -F'(' '{print $1}' | awk -F'.' '{print $1"."$2"."$3}')
-    IFS_BKP=$IFS
+    #IFS_BKP=$IFS
     IFS='.' read -r vt_major vt_minor vt_patch <<< "${TESTED_BASH_VER}"
     IFS='.' read -r v_major v_minor v_patch <<< "${bash_ver}"
-    IFS=$IFS_BKP
+    IFS=$' \t\n'
+    #IFS=$IFS_BKP
     if [[ $v_major -lt $vt_major ]] || \
            ([[ $v_major -eq $vt_major ]] && [[ $v_minor -lt $vt_minor ]]) || \
            ([[ $v_major -eq $vt_major ]] && [[ $v_minor -eq $vt_minor ]] \
