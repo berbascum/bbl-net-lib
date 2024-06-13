@@ -1,4 +1,2 @@
-# berb-bash-libs
-Bash libs for berbascum's bash tools
-
-### Usage
+# bbl-net-lib
+Bash lib with net functions to be used by berbascum's scripts
