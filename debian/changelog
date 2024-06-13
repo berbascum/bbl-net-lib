@@ -1,7 +1,9 @@
-bbl-net-lib (1.0.0.1+git20240613220850.bd46c04.testing) testing; urgency=medium
+bbl-net-lib (1.0.0.1+git20240613232055.08619a7.testing) testing; urgency=medium
 
   [berbascum]
-  * (bd46c04) Add debian pckaging 
+  * (08619a7) Move main lib to libs/modules dir 
+  * (a9783aa) Add .gitignore 
+  * (cbb4bdc) Add debian packaging 
   * (b7f64a6) Split: the library was splitted to it's own project 
   * (8022109) New: fn_bblgit_create_tag independent function to create a tag 
   * (156f424) Fix: some author related bugs in fn_bblgit_changelog_build 
@@ -37,4 +39,4 @@ bbl-net-lib (1.0.0.1+git20240613220850.bd46c04.testing) testing; urgency=medium
   * (c666fd6) Update: stdout messages on some functions to be all aligned 
   * (85d525a) New: Initial libs moved from berb-docker-mgr package to be shared with other scripts 
 
- -- berbascum <berbascum@ticv.cat>  Thu, 13 Jun 2024 22:08:50 +0200
+ -- berbascum <berbascum@ticv.cat>  Thu, 13 Jun 2024 23:20:55 +0200
