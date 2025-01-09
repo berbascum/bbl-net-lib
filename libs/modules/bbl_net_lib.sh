@@ -48,7 +48,7 @@ fn_header_info() {
 #[HEADER_END]
 
 
-fn_bbnl_ip_forward_activa() {
+fn_bblnet_ip_forward_activa() {
     ## Activa ipv4_forward (requerit per xarxa containers) i reinicia docker.
     ## És la primera funció que crida l'script
     FORWARD_ES_ACTIVAT=$(cat /proc/sys/net/ipv4/ip_forward)
