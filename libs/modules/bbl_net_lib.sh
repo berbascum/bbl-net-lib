@@ -33,6 +33,21 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#[HEADER_SECTION]
+fn_header_info() {
+    BIN_TYPE="lib"
+    BIN_SRC_TYPE="bash"
+    BIN_SRC_EXT="sh"
+    BIN_NAME="bbl_net_lib"
+    TOOL_VERSION="1.0.0.1"
+    TOOL_VERSION_INT="1001"
+    TOOL_RELEASE="testing"
+    URGENCY='optional'
+    TESTED_BASH_VER='5.2.15'
+}
+#[HEADER_END]
+
+
 fn_bbnl_ip_forward_activa() {
     ## Activa ipv4_forward (requerit per xarxa containers) i reinicia docker.
     ## És la primera funció que crida l'script
